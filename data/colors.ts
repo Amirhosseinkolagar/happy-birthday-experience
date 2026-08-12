@@ -1,0 +1,148 @@
+import type { ColorOption } from "@/types/experience";
+
+export const colors: ColorOption[] = [
+  {
+    id: "champagne",
+    name: "شامپاینی",
+    value: "#E8D5A8",
+    softValue: "#6E5D3C",
+  },
+  {
+    id: "gold",
+    name: "طلایی",
+    value: "#D4AF37",
+    softValue: "#6B591D",
+  },
+  {
+    id: "rose",
+    name: "رز",
+    value: "#D98C9A",
+    softValue: "#713F49",
+  },
+  {
+    id: "blush",
+    name: "صورتی پودری",
+    value: "#E9BFC5",
+    softValue: "#755B60",
+  },
+  {
+    id: "lavender",
+    name: "یاسی",
+    value: "#B9A7D9",
+    softValue: "#5E5470",
+  },
+  {
+    id: "royal-purple",
+    name: "بنفش سلطنتی",
+    value: "#7654A8",
+    softValue: "#3F2D5A",
+  },
+  {
+    id: "midnight-blue",
+    name: "آبی نیمه‌شب",
+    value: "#52658C",
+    softValue: "#303A52",
+  },
+  {
+    id: "ice-blue",
+    name: "آبی یخی",
+    value: "#A8D8E8",
+    softValue: "#55717A",
+  },
+  {
+    id: "ocean",
+    name: "اقیانوسی",
+    value: "#247A88",
+    softValue: "#174B53",
+  },
+  {
+    id: "emerald",
+    name: "زمردی",
+    value: "#2F8F70",
+    softValue: "#1E5846",
+  },
+  {
+    id: "sage",
+    name: "سبز مریم‌گلی",
+    value: "#A5B59B",
+    softValue: "#596451",
+  },
+  {
+    id: "mint",
+    name: "نعنایی",
+    value: "#A7D8C5",
+    softValue: "#547268",
+  },
+  {
+    id: "coral",
+    name: "مرجانی",
+    value: "#E9856F",
+    softValue: "#743F34",
+  },
+  {
+    id: "sunset",
+    name: "غروب",
+    value: "#E39A62",
+    softValue: "#704E32",
+  },
+  {
+    id: "amber",
+    name: "کهربایی",
+    value: "#D88A28",
+    softValue: "#704817",
+  },
+  {
+    id: "ruby",
+    name: "یاقوتی",
+    value: "#A83D50",
+    softValue: "#5B202B",
+  },
+  {
+    id: "wine",
+    name: "شرابی",
+    value: "#702F43",
+    softValue: "#401C28",
+  },
+  {
+    id: "mocha",
+    name: "موکا",
+    value: "#9A7960",
+    softValue: "#514035",
+  },
+  {
+    id: "coffee",
+    name: "قهوه‌ای",
+    value: "#765746",
+    softValue: "#403027",
+  },
+  {
+    id: "ivory",
+    name: "آیوری",
+    value: "#F3EBDD",
+    softValue: "#756F65",
+  },
+  {
+    id: "silver",
+    name: "نقره‌ای",
+    value: "#BFC3C7",
+    softValue: "#62666A",
+  },
+  {
+    id: "pearl",
+    name: "مرواریدی",
+    value: "#D9D4CC",
+    softValue: "#6C6964",
+  },
+  {
+    id: "charcoal",
+    name: "ذغالی",
+    value: "#454545",
+    softValue: "#292929",
+  },
+  {
+    id: "black",
+    name: "مشکی",
+    value: "#111111",
+    softValue: "#050505",
+  },
+];
