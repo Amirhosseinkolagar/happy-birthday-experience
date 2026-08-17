@@ -3,6 +3,8 @@ export type ColorOption = {
   name: string;
   value: string;
   softValue: string;
+  group: string;
+  groupName: string;
 };
 
 export type VisualWorld = {
@@ -20,12 +22,22 @@ export type EmotionOption = {
   title: string;
   emoji: string;
   description: string;
+  image: string;
 };
 
 export type SymbolOption = {
   id: string;
   title: string;
   emoji: string;
+  image: string;
+};
+
+export type MusicTrack = {
+  id: string;
+  title: string;
+  subtitle: string;
+  audio: string;
+  duration?: number;
 };
 
 export type MusicOption = {
@@ -33,6 +45,15 @@ export type MusicOption = {
   title: string;
   subtitle: string;
   emoji: string;
+  image: string;
+  audio: string;
+  category:
+    | "piano"
+    | "acoustic"
+    | "cinematic"
+    | "lofi"
+    | "classical"
+    | "dreamy";
 };
 
 export type LightingOption = {
@@ -41,6 +62,15 @@ export type LightingOption = {
   emoji: string;
   description: string;
   gradient: string;
+  image: string;
+};
+
+export type BirthdayProfile = {
+  name: string;
+  birthDate: string;
+  wish: string;
+  age: number;
+  tone: "warm-friendly" | "warm-respectful";
 };
 
 export type UserPreferences = {
@@ -51,6 +81,7 @@ export type UserPreferences = {
   emotions: string[];
   symbols: string[];
   secretSymbol: string | null;
+  profile: BirthdayProfile | null;
 };
 
 export type ExperienceTheme = {

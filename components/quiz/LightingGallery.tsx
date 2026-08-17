@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { useState } from "react";
 import { motion } from "motion/react";
 import { lightingOptions } from "@/data/lighting";
 
@@ -12,104 +13,374 @@ export default function LightingGallery({
   selectedLighting,
   onComplete,
 }: LightingGalleryProps) {
+  const [localSelection, setLocalSelection] =
+    useState<string>(selectedLighting);
+
+  const isComplete = Boolean(localSelection);
+
+  function handleSelect(lightingId: string) {
+    setLocalSelection(lightingId);
+  }
+
+  function handleContinue() {
+    if (!localSelection) {
+      return;
+    }
+
+    onComplete(localSelection);
+  }
+
   return (
     <main
       dir="rtl"
-      className="relative min-h-screen overflow-hidden bg-[#070707] text-white"
+      className="lighting-experience"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.1),transparent_55%)]" />
+      {/* =====================================================
+          BACKGROUND
+          ===================================================== */}
 
-      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-12 sm:px-8 lg:px-12">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-          className="mb-12 text-center"
+      <div
+        className="lighting-bg"
+        aria-hidden="true"
+      />
+
+      <div
+        className="lighting-noise"
+        aria-hidden="true"
+      />
+
+      <div
+        className="lighting-orbit lighting-orbit-one"
+        aria-hidden="true"
+      />
+
+      <div
+        className="lighting-orbit lighting-orbit-two"
+        aria-hidden="true"
+      />
+
+      {/* =====================================================
+          SHELL
+          ===================================================== */}
+
+      <section className="lighting-shell">
+
+        {/* ===================================================
+            TOP BAR
+            =================================================== */}
+
+        <div className="lighting-topbar">
+
+          <div className="lighting-chapter">
+            <span>
+              فصل پنجم
+            </span>
+
+            <strong>
+              لایه‌ی نور
+            </strong>
+          </div>
+
+          <div className="lighting-counter">
+            <span
+              className={isComplete ? "active" : ""}
+            >
+              {isComplete ? "01" : "00"}
+            </span>
+
+            <i>/</i>
+
+            <span>
+              01
+            </span>
+          </div>
+
+        </div>
+
+
+        {/* ===================================================
+            HEADER
+            =================================================== */}
+
+        <motion.header
+          className="lighting-heading"
+          initial={{
+            opacity: 0,
+            y: 20,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.55,
+            ease: "easeOut",
+          }}
         >
-          <span className="text-xs tracking-[0.35em] text-[#D4AF37]">
-            انتخاب چهارم
+
+          <span className="lighting-eyebrow">
+            نور فقط روشنایی نیست...
           </span>
 
-          <h1 className="mt-4 text-4xl font-semibold text-[#F8F3E9] sm:text-5xl">
-            اگر این دنیا نور داشت، چه نوری بود؟
+          <h1>
+            اگر این دنیا
+            <br />
+            <em>نور داشت، چه نوری بود؟</em>
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/50 sm:text-base">
-            یک نور را انتخاب کن؛ نوری که حال‌وهوای این تجربه را کامل کند.
+          <p>
+            یک نور را انتخاب کن؛
+            <br />
+            نوری که فکر می‌کنی حال‌وهوای این تجربه را کامل می‌کند.
           </p>
-        </motion.div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="lighting-hint">
+            <span />
+            به اولین حسی که درونت شکل می‌گیرد اعتماد کن.
+            <span />
+          </div>
+
+        </motion.header>
+
+
+        {/* ===================================================
+            LIGHTING GRID
+            =================================================== */}
+
+        <div className="lighting-grid">
+
           {lightingOptions.map((lighting, index) => {
-            const selected = selectedLighting === lighting.id;
+
+            const selected =
+              localSelection === lighting.id;
 
             return (
               <motion.button
                 key={lighting.id}
                 type="button"
-                onClick={() => onComplete(lighting.id)}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, duration: 0.5 }}
-                whileHover={{ y: -6 }}
-                whileTap={{ scale: 0.97 }}
-                className={`group relative min-h-56 overflow-hidden rounded-3xl border p-7 text-right transition-all duration-300 ${
+
+                /*
+                  مهم:
+                  هیچ whileHover نداریم.
+                  hover کاملاً توسط CSS انجام می‌شود.
+                */
+
+                onClick={() =>
+                  handleSelect(lighting.id)
+                }
+
+                className={[
+                  "lighting-card",
                   selected
-                    ? "border-[#D4AF37]/70 bg-[#D4AF37]/10 shadow-[0_0_50px_rgba(212,175,55,0.14)]"
-                    : "border-white/10 bg-white/[0.035] hover:border-white/25 hover:bg-white/[0.06]"
-                }`}
+                    ? "is-selected"
+                    : "",
+                ].join(" ")}
+
+                initial={{
+                  opacity: 0,
+                  y: 18,
+                }}
+
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+
+                transition={{
+                  delay: index * 0.045,
+                  duration: 0.4,
+                  ease: "easeOut",
+                }}
               >
+
+                {/* =================================================
+                    IMAGE
+                    ================================================= */}
+
                 <div
-                  className="pointer-events-none absolute inset-0 opacity-70 transition-opacity duration-500 group-hover:opacity-100"
-                  style={{ background: lighting.gradient }}
+                  className="lighting-card-image"
+                  style={{
+                    backgroundImage:
+                      `url(${lighting.image})`,
+                  }}
+                  aria-hidden="true"
                 />
 
-                <div className="relative z-10">
-                  <div className="mb-7 text-5xl">
-                    {lighting.emoji}
-                  </div>
 
-                  <h2 className="text-2xl font-medium text-white">
+                {/* =================================================
+                    LIGHT GLOW
+                    ================================================= */}
+
+                <div
+                  className="lighting-card-glow"
+                  style={{
+                    background:
+                      lighting.gradient,
+                  }}
+                  aria-hidden="true"
+                />
+
+
+                {/* =================================================
+                    OVERLAY
+                    ================================================= */}
+
+                <div
+                  className="lighting-card-overlay"
+                  aria-hidden="true"
+                />
+
+
+                {/* =================================================
+                    FRAME
+                    ================================================= */}
+
+                <div
+                  className="lighting-card-frame"
+                  aria-hidden="true"
+                />
+
+
+                {/* =================================================
+                    META
+                    ================================================= */}
+
+                <div className="lighting-card-meta">
+
+                  <span>
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+
+                  <span>
+                    {lighting.emoji}
+                  </span>
+
+                </div>
+
+
+                {/* =================================================
+                    SELECT
+                    ================================================= */}
+
+                <div
+                  className={[
+                    "lighting-select",
+                    selected
+                      ? "visible"
+                      : "",
+                  ].join(" ")}
+                  aria-hidden="true"
+                >
+                  {selected ? "✓" : ""}
+                </div>
+
+
+                {/* =================================================
+                    CONTENT
+                    ================================================= */}
+
+                <div className="lighting-card-content">
+
+                  <span className="lighting-card-kicker">
+                    ATMOSPHERE
+                  </span>
+
+                  <h2>
                     {lighting.title}
                   </h2>
 
-                  <p className="mt-3 text-sm leading-7 text-white/50">
+                  <p>
                     {lighting.description}
                   </p>
 
-                  {selected && (
-                    <motion.div
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="absolute left-0 top-0 flex h-8 w-8 items-center justify-center rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 text-sm text-[#D4AF37]"
-                    >
-                      ✓
-                    </motion.div>
-                  )}
+                  <span className="lighting-card-discover">
+                    {selected
+                      ? "این نور را انتخاب کردی"
+                      : "برای کشف این فضا انتخابش کن"}
+                  </span>
+
                 </div>
+
               </motion.button>
             );
           })}
+
         </div>
 
+
+        {/* ===================================================
+            BOTTOM MESSAGE
+            =================================================== */}
+
         <motion.div
+          className="lighting-bottom"
           initial={false}
           animate={{
-            opacity: selectedLighting ? 1 : 0.3,
-            y: selectedLighting ? 0 : 6,
+            opacity: isComplete ? 1 : 0.5,
           }}
-          className="mt-12 flex justify-center"
+          transition={{
+            duration: 0.25,
+          }}
         >
-          <button
-            type="button"
-            disabled={!selectedLighting}
-            onClick={() => onComplete(selectedLighting)}
-            className="rounded-full border border-[#D4AF37]/50 bg-black/20 px-8 py-3.5 text-sm text-[#D4AF37] backdrop-blur-xl transition hover:bg-[#D4AF37]/10 disabled:cursor-not-allowed"
-          >
-            ادامه
-            <span className="mr-3">→</span>
-          </button>
+
+          <div className="lighting-bottom-line" />
+
+          <div className="lighting-bottom-content">
+
+            <span>
+              {isComplete
+                ? "انتخاب ثبت شد"
+                : "هنوز یک انتخاب باقی مانده"}
+            </span>
+
+            <strong>
+              {isComplete
+                ? "حالا این نور بخشی از دنیای توست..."
+                : "بگذار حس اول راهنمایت باشد."}
+            </strong>
+
+          </div>
+
+          <div className="lighting-bottom-line" />
+
         </motion.div>
+
+
+        {/* ===================================================
+            CONTINUE
+            =================================================== */}
+
+        <motion.button
+          type="button"
+          disabled={!isComplete}
+          onClick={handleContinue}
+          className="lighting-continue"
+
+          initial={false}
+
+          animate={{
+            opacity: isComplete ? 1 : 0.35,
+            y: isComplete ? 0 : 5,
+          }}
+
+          transition={{
+            duration: 0.25,
+            ease: "easeOut",
+          }}
+        >
+
+          <span>
+            {isComplete
+              ? "این نور را با خودم می‌برم"
+              : "یک نور را انتخاب کن"}
+          </span>
+
+          <b>
+            ←
+          </b>
+
+        </motion.button>
+
       </section>
     </main>
   );

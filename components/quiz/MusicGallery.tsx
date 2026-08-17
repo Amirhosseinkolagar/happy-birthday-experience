@@ -1,63 +1,406 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+
 import { motion } from "motion/react";
 
 import { musicOptions } from "@/data/music";
 
+import {
+  useExperienceAudio,
+} from "@/src/components/audio/ExperienceAudioManager";
+
 type MusicGalleryProps = {
   selectedMusic: string[];
-  onComplete: (musicIds: string[]) => void;
+  onComplete: (
+    musicIds: string[]
+  ) => void;
 };
-
-const MAX_SELECTIONS = 2;
 
 export default function MusicGallery({
   selectedMusic,
   onComplete,
 }: MusicGalleryProps) {
-  const [localSelections, setLocalSelections] =
-    useState<string[]>(selectedMusic);
+  const [selectedTrack, setSelectedTrack] =
+    useState<string | null>(
+      selectedMusic[0] ?? null
+    );
 
-  const isComplete =
-    localSelections.length === MAX_SELECTIONS;
+  const [playingTrack, setPlayingTrack] =
+    useState<string | null>(null);
 
-  function toggleMusic(musicId: string) {
-    setLocalSelections((current) => {
-      if (current.includes(musicId)) {
-        return current.filter((id) => id !== musicId);
-      }
+  /*
+   * =======================================================
+   * BACKGROUND AUDIO
+   * =======================================================
+   */
 
-      if (current.length >= MAX_SELECTIONS) {
-        return current;
-      }
+  const {
+    pauseForPreview,
+    resumeAfterPreview,
+  } = useExperienceAudio();
 
-      return [...current, musicId];
-    });
-  }
+  /*
+   * =======================================================
+   * PREVIEW AUDIO
+   * =======================================================
+   *
+   * فقط یک Audio برای Preview داریم.
+   * =======================================================
+   */
 
-  function handleContinue() {
-    if (!isComplete) {
+  const audioRef =
+    useRef<HTMLAudioElement | null>(
+      null
+    );
+
+  /*
+   * جلوگیری از Race Condition
+   *
+   * اگر کاربر سریع بین کاورها حرکت کند،
+   * Preview قبلی نباید دوباره شروع شود.
+   */
+
+  const previewRequestRef =
+    useRef(0);
+
+  /*
+   * مشخص می‌کند که Background Music
+   * به خاطر Preview متوقف شده است.
+   */
+
+  const backgroundPausedRef =
+    useRef(false);
+
+  /*
+   * =======================================================
+   * CREATE PREVIEW AUDIO
+   * =======================================================
+   */
+
+  useEffect(() => {
+    const audio =
+      new Audio();
+
+    audio.preload = "none";
+
+    audioRef.current =
+      audio;
+
+    const handleEnded =
+      () => {
+        setPlayingTrack(null);
+
+        if (
+          backgroundPausedRef.current
+        ) {
+          backgroundPausedRef.current =
+            false;
+
+          void resumeAfterPreview();
+        }
+      };
+
+    audio.addEventListener(
+      "ended",
+      handleEnded
+    );
+
+    return () => {
+      audio.pause();
+      audio.src = "";
+
+      audio.removeEventListener(
+        "ended",
+        handleEnded
+      );
+
+      audioRef.current =
+        null;
+    };
+  }, [
+    resumeAfterPreview,
+  ]);
+
+  /*
+   * =======================================================
+   * STOP PREVIEW
+   * =======================================================
+   */
+
+  async function stopPreview(
+    trackId?: string
+  ) {
+    const currentTrack =
+      playingTrack;
+
+    /*
+     * اگر درخواست مربوط به کارت
+     * فعلی نیست، کاری نکن.
+     */
+
+    if (
+      trackId &&
+      currentTrack &&
+      trackId !== currentTrack
+    ) {
       return;
     }
 
-    onComplete(localSelections);
+    /*
+     * درخواست‌های قبلی را invalidate می‌کنیم.
+     */
+
+    previewRequestRef.current += 1;
+
+    const audio =
+      audioRef.current;
+
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+
+    setPlayingTrack(null);
+
+    /*
+     * Background Music را برگردان.
+     */
+
+    if (
+      backgroundPausedRef.current
+    ) {
+      backgroundPausedRef.current =
+        false;
+
+      await resumeAfterPreview();
+    }
   }
+
+  /*
+   * =======================================================
+   * START PREVIEW
+   * =======================================================
+   */
+
+  async function startPreview(
+    trackId: string
+  ) {
+    const requestId =
+      ++previewRequestRef.current;
+
+    /*
+     * اگر همان Track در حال پخش است،
+     * دوباره از اول اجرا نکن.
+     */
+
+    if (
+      playingTrack === trackId
+    ) {
+      return;
+    }
+
+    const track =
+      musicOptions.find(
+        (item) =>
+          item.id === trackId
+      );
+
+    if (!track) {
+      return;
+    }
+
+    const audio =
+      audioRef.current;
+
+    if (!audio) {
+      return;
+    }
+
+    /*
+     * اگر Preview دیگری در حال پخش است،
+     * اول آن را قطع کن.
+     */
+
+    audio.pause();
+    audio.currentTime = 0;
+
+    /*
+     * Background Music را موقتاً Pause کن.
+     */
+
+    if (
+      !backgroundPausedRef.current
+    ) {
+      backgroundPausedRef.current =
+        true;
+
+      await pauseForPreview();
+    }
+
+    /*
+     * ممکن است کاربر در زمان Fade
+     * از کارت خارج شده باشد.
+     */
+
+    if (
+      requestId !==
+      previewRequestRef.current
+    ) {
+      return;
+    }
+
+    /*
+     * مسیر Preview جدید
+     */
+
+    audio.src =
+      track.audio;
+
+    try {
+      await audio.play();
+
+      /*
+       * ممکن است در زمان await
+       * کاربر کارت را ترک کرده باشد.
+       */
+
+      if (
+        requestId !==
+        previewRequestRef.current
+      ) {
+        audio.pause();
+        audio.currentTime = 0;
+
+        return;
+      }
+
+      setPlayingTrack(
+        trackId
+      );
+    } catch {
+      if (
+        requestId ===
+        previewRequestRef.current
+      ) {
+        setPlayingTrack(
+          null
+        );
+
+        if (
+          backgroundPausedRef.current
+        ) {
+          backgroundPausedRef.current =
+            false;
+
+          await resumeAfterPreview();
+        }
+      }
+    }
+  }
+
+  /*
+   * =======================================================
+   * SELECT TRACK
+   * =======================================================
+   */
+
+  function handleSelect(
+    trackId: string
+  ) {
+    setSelectedTrack(
+      (current) =>
+        current === trackId
+          ? null
+          : trackId
+    );
+  }
+
+  /*
+   * =======================================================
+   * CONTINUE
+   * =======================================================
+   */
+
+  async function handleContinue() {
+    if (!selectedTrack) {
+      return;
+    }
+
+    await stopPreview();
+
+    onComplete([
+      selectedTrack,
+    ]);
+  }
+
+  const isComplete =
+    selectedTrack !== null;
+
+  /*
+   * =======================================================
+   * RENDER
+   * =======================================================
+   */
 
   return (
     <main
       dir="rtl"
-      className="relative min-h-screen overflow-hidden bg-[#070707] text-white"
+      className="music-experience"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.1),transparent_55%)]" />
+      <div className="music-atmosphere" />
 
-      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-12 sm:px-8 lg:px-12">
+      <div className="music-orbit music-orbit-one" />
+
+      <div className="music-orbit music-orbit-two" />
+
+      <section className="music-shell">
+
+        {/* TOP BAR */}
+
+        <div className="music-topbar">
+          <div>
+            <span className="music-step-label">
+              فصل چهارم
+            </span>
+
+            <span className="music-step-title">
+              صدای این داستان
+            </span>
+          </div>
+
+          <div className="music-counter">
+            <span
+              className={
+                isComplete
+                  ? "active"
+                  : ""
+              }
+            >
+              {isComplete
+                ? "01"
+                : "00"}
+            </span>
+
+            <i>/</i>
+
+            <span>
+              01
+            </span>
+          </div>
+        </div>
 
         {/* HEADER */}
-        <motion.div
+
+        <motion.header
+          className="music-heading"
           initial={{
             opacity: 0,
-            y: 24,
+            y: 25,
           }}
           animate={{
             opacity: 1,
@@ -66,138 +409,334 @@ export default function MusicGallery({
           transition={{
             duration: 0.7,
           }}
-          className="mb-12 text-center"
         >
-          <span className="text-xs tracking-[0.35em] text-[#D4AF37]">
-            انتخاب چهارم
+          <span className="music-eyebrow">
+            بعضی انتخاب‌ها را نمی‌شود دید...
           </span>
 
-          <h1 className="mt-4 text-4xl font-semibold text-[#F8F3E9] sm:text-5xl">
-            صدای این دنیا چه باشد؟
+          <h1>
+            باید
+            <br />
+            <em>
+              گوششان کنی.
+            </em>
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/50 sm:text-base">
-            دو سبک موسیقی را انتخاب کن که دوست داری
-            در این تجربه حضور داشته باشند.
+          <p>
+            ۱۸ قطعه اینجا پنهان شده.
+            <br />
+            روی هرکدام برو، چند ثانیه از دنیایش را بشنو
+            <br />
+            و فقط یکی را با خودت به مرحله‌ی بعد ببر.
           </p>
 
-          <motion.div
-            initial={false}
-            animate={{
-              opacity: isComplete ? 1 : 0.6,
-            }}
-            className="mt-6 text-sm text-[#D4AF37]"
-          >
-            {localSelections.length} از {MAX_SELECTIONS}
-          </motion.div>
-        </motion.div>
+          <div className="music-secret-hint">
+            <span />
 
-        {/* MUSIC CARDS */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {musicOptions.map((music, index) => {
-            const selected =
-              localSelections.includes(music.id);
+            شاید موسیقی‌ای که انتخاب می‌کنی،
+            بیشتر از چیزی که فکر می‌کنی درباره‌ات بگوید.
 
-            const disabled =
-              !selected &&
-              localSelections.length >= MAX_SELECTIONS;
+            <span />
+          </div>
+        </motion.header>
 
-            const selectionIndex =
-              localSelections.indexOf(music.id);
+        {/* TRACK GRID */}
 
-            return (
-              <motion.button
-                key={music.id}
-                type="button"
-                disabled={disabled}
-                onClick={() => toggleMusic(music.id)}
-                initial={{
-                  opacity: 0,
-                  y: 20,
-                }}
-                animate={{
-                  opacity: disabled ? 0.35 : 1,
-                  y: 0,
-                }}
-                transition={{
-                  delay: index * 0.06,
-                  duration: 0.5,
-                }}
-                whileHover={
-                  disabled
-                    ? undefined
-                    : {
-                        y: -6,
-                      }
-                }
-                whileTap={
-                  disabled
-                    ? undefined
-                    : {
-                        scale: 0.97,
-                      }
-                }
-                className={`group relative min-h-52 overflow-hidden rounded-3xl border p-6 text-right transition-all duration-300 ${
-                  selected
-                    ? "border-[#D4AF37]/70 bg-[#D4AF37]/10 shadow-[0_0_40px_rgba(212,175,55,0.12)]"
-                    : "border-white/10 bg-white/[0.035] hover:border-white/25 hover:bg-white/[0.06]"
-                }`}
-              >
-                {/* NUMBER */}
-                {selected && (
-                  <motion.div
-                    initial={{
-                      scale: 0,
-                      opacity: 0,
-                    }}
-                    animate={{
-                      scale: 1,
-                      opacity: 1,
-                    }}
-                    className="absolute left-5 top-5 flex h-8 w-8 items-center justify-center rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 text-sm text-[#D4AF37]"
-                  >
-                    {selectionIndex + 1}
-                  </motion.div>
-                )}
+        <div className="music-grid">
+          {musicOptions.map(
+            (music, index) => {
+              const selected =
+                selectedTrack ===
+                music.id;
 
-                <div className="mb-7 text-4xl">
-                  {music.emoji}
-                </div>
+              const playing =
+                playingTrack ===
+                music.id;
 
-                <h2 className="text-xl font-medium text-white">
-                  {music.title}
-                </h2>
+              return (
+                <motion.button
+                  key={music.id}
+                  type="button"
 
-                <p className="mt-3 text-sm leading-7 text-white/45">
-                  {music.subtitle}
-                </p>
-              </motion.button>
-            );
-          })}
+                  /*
+                   * انتخاب واقعی Track
+                   */
+
+                  onClick={() =>
+                    handleSelect(
+                      music.id
+                    )
+                  }
+
+                  /*
+                   * =================================================
+                   * DESKTOP
+                   * =================================================
+                   */
+
+                  onMouseEnter={() =>
+                    startPreview(
+                      music.id
+                    )
+                  }
+
+                  onMouseLeave={() =>
+                    void stopPreview(
+                      music.id
+                    )
+                  }
+
+                  /*
+                   * =================================================
+                   * TOUCH / MOBILE
+                   * =================================================
+                   *
+                   * لمس و نگه داشتن:
+                   * Preview
+                   *
+                   * رها کردن:
+                   * Resume Background
+                   * =================================================
+                   */
+
+                  onPointerDown={(
+                    event
+                  ) => {
+                    if (
+                      event.pointerType ===
+                      "touch"
+                    ) {
+                      void startPreview(
+                        music.id
+                      );
+                    }
+                  }}
+
+                  onPointerUp={(
+                    event
+                  ) => {
+                    if (
+                      event.pointerType ===
+                      "touch"
+                    ) {
+                      void stopPreview(
+                        music.id
+                      );
+                    }
+                  }}
+
+                  onPointerCancel={(
+                    event
+                  ) => {
+                    if (
+                      event.pointerType ===
+                      "touch"
+                    ) {
+                      void stopPreview(
+                        music.id
+                      );
+                    }
+                  }}
+
+                  /*
+                   * Keyboard accessibility
+                   */
+
+                  onFocus={() =>
+                    startPreview(
+                      music.id
+                    )
+                  }
+
+                  onBlur={() =>
+                    void stopPreview(
+                      music.id
+                    )
+                  }
+
+                  className={[
+                    "music-card",
+                    selected
+                      ? "is-selected"
+                      : "",
+                    playing
+                      ? "is-playing"
+                      : "",
+                  ].join(" ")}
+
+                  initial={{
+                    opacity: 0,
+                    y: 25,
+                  }}
+
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                  }}
+
+                  transition={{
+                    delay:
+                      index *
+                      0.025,
+                    duration: 0.4,
+                  }}
+
+                  whileHover={{
+                    y: -6,
+                  }}
+
+                  whileTap={{
+                    scale: 0.985,
+                  }}
+                >
+                  {/* IMAGE */}
+
+                  <div className="music-image-wrap">
+                    <div
+                      className="music-image"
+                      style={{
+                        backgroundImage:
+                          `url("${music.image}")`,
+                      }}
+                      aria-hidden="true"
+                    />
+
+                    <div className="music-image-overlay" />
+
+                    {/* PLAY STATE */}
+
+                    <div className="music-play-indicator">
+                      {playing ? (
+                        <div className="music-equalizer">
+                          <span />
+                          <span />
+                          <span />
+                          <span />
+                        </div>
+                      ) : (
+                        <span className="music-play-icon">
+                          ▶
+                        </span>
+                      )}
+                    </div>
+
+                    {/* SELECTION */}
+
+                    <div
+                      className={[
+                        "music-selection",
+                        selected
+                          ? "visible"
+                          : "",
+                      ].join(" ")}
+                    >
+                      {selected
+                        ? "✓"
+                        : ""}
+                    </div>
+                  </div>
+
+                  {/* INFO */}
+
+                  <div className="music-card-content">
+                    <h2>
+                      {music.title}
+                    </h2>
+
+                    <p>
+                      {music.subtitle}
+                    </p>
+
+                    <span className="music-card-action">
+                      {selected
+                        ? "این قطعه را انتخاب کردی"
+                        : playing
+                          ? "در حال شنیدن..."
+                          : "برای شنیدن لمس یا روی کاور حرکت کن"}
+                    </span>
+                  </div>
+                </motion.button>
+              );
+            }
+          )}
         </div>
 
-        {/* CONTINUE */}
-        <motion.div
-          initial={false}
-          animate={{
-            opacity: isComplete ? 1 : 0.35,
-            y: isComplete ? 0 : 6,
-          }}
-          className="mt-12 flex justify-center"
-        >
-          <button
-            type="button"
-            disabled={!isComplete}
-            onClick={handleContinue}
-            className="rounded-full border border-[#D4AF37]/50 bg-black/20 px-8 py-3.5 text-sm text-[#D4AF37] backdrop-blur-xl transition hover:bg-[#D4AF37]/10 disabled:cursor-not-allowed"
-          >
-            ادامه
+        {/* BOTTOM */}
 
-            <span className="mr-3">
-              →
+        <motion.div
+          className="music-bottom"
+          animate={{
+            opacity:
+              isComplete
+                ? 1
+                : 0.5,
+          }}
+        >
+          <div className="music-bottom-line" />
+
+          <div>
+            <span className="music-bottom-kicker">
+              {isComplete
+                ? "انتخاب ثبت شد"
+                : "هنوز صدای درست را پیدا نکردی"}
             </span>
-          </button>
+
+            <strong>
+              {isComplete
+                ? "این قطعه حالا بخشی از داستان توست..."
+                : "۱۸ دنیا منتظرند تا شنیده شوند."}
+            </strong>
+          </div>
+
+          <div className="music-bottom-line" />
         </motion.div>
+
+        {/* CONTINUE */}
+
+        <motion.button
+          type="button"
+          disabled={!isComplete}
+          onClick={() =>
+            void handleContinue()
+          }
+          className="music-continue"
+          animate={{
+            opacity:
+              isComplete
+                ? 1
+                : 0.3,
+
+            y:
+              isComplete
+                ? 0
+                : 8,
+          }}
+          whileHover={
+            isComplete
+              ? {
+                  scale: 1.035,
+                }
+              : undefined
+          }
+          whileTap={
+            isComplete
+              ? {
+                  scale: 0.97,
+                }
+              : undefined
+          }
+        >
+          <span>
+            {isComplete
+              ? "این صدا را با خودم می‌برم"
+              : "یک قطعه را انتخاب کن"}
+          </span>
+
+          <b>
+            ←
+          </b>
+        </motion.button>
+
       </section>
     </main>
   );

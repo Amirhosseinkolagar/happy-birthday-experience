@@ -8,7 +8,7 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🌊",
     gradient: "linear-gradient(145deg, #071F2B, #176B78, #A8D8E8)",
     mood: "calm",
-    image: "/images/worlds/ocean.jpg",
+    image: "/images/worlds/ocean.webp",
   },
   {
     id: "sunset",
@@ -17,7 +17,7 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🌅",
     gradient: "linear-gradient(145deg, #391C25, #C45B4A, #E39A62)",
     mood: "warm",
-    image: "/images/worlds/sunset.jpg",
+    image: "/images/worlds/sunset.webp",
   },
   {
     id: "cosmos",
@@ -26,7 +26,7 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🌌",
     gradient: "linear-gradient(145deg, #080817, #30245E, #6B5B95)",
     mood: "dreamy",
-    image: "/images/worlds/cosmos.jpg",
+    image: "/images/worlds/cosmos.webp",
   },
   {
     id: "forest",
@@ -35,7 +35,7 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🌲",
     gradient: "linear-gradient(145deg, #08140F, #24523C, #A5B59B)",
     mood: "natural",
-    image: "/images/worlds/forest.jpg",
+    image: "/images/worlds/forest.png",
   },
   {
     id: "desert",
@@ -44,7 +44,7 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🏜️",
     gradient: "linear-gradient(145deg, #2C1B13, #9A5E36, #E3B16E)",
     mood: "mystic",
-    image: "/images/worlds/desert.jpg",
+    image: "/images/worlds/desert.webp",
   },
   {
     id: "garden",
@@ -53,7 +53,7 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🌸",
     gradient: "linear-gradient(145deg, #2B1724, #9B526C, #E9BFC5)",
     mood: "romantic",
-    image: "/images/worlds/garden.jpg",
+    image: "/images/worlds/garden.webp",
   },
   {
     id: "candle",
@@ -62,7 +62,7 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🕯️",
     gradient: "linear-gradient(145deg, #100C08, #59401E, #D4AF37)",
     mood: "intimate",
-    image: "/images/worlds/candle.jpg",
+    image: "/images/worlds/candle.webp",
   },
   {
     id: "royal",
@@ -71,6 +71,6 @@ export const visualWorlds: VisualWorld[] = [
     emoji: "🏛️",
     gradient: "linear-gradient(145deg, #090909, #33270C, #D4AF37)",
     mood: "luxury",
-    image: "/images/worlds/royal.jpg",
+    image: "/images/worlds/royal.webp",
   },
 ];

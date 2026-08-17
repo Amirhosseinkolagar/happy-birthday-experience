@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { useExperience } from "@/hooks/useExperience";
+import { useState } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "motion/react";
 
+import { useExperience } from "@/hooks/useExperience";
 import { visualWorlds } from "@/data/worlds";
 
 type WorldGalleryProps = {
@@ -16,167 +16,203 @@ export default function WorldGallery({
 }: WorldGalleryProps) {
   const { preferences, setWorlds } = useExperience();
 
-  const selectedWorlds = preferences.worlds;
+  /*
+   * این آزمون فقط یک انتخاب دارد.
+   * اگر قبلاً چند مقدار داخل state مانده باشد،
+   * فقط اولین مورد استفاده می‌شود.
+   */
+  const selectedWorldId =
+    preferences.worlds?.[0] ?? visualWorlds[0]?.id ?? "";
 
-  const [activeWorldId, setActiveWorldId] = useState(
-    visualWorlds[0]?.id ?? ""
-  );
+  const [activeWorldId, setActiveWorldId] =
+    useState(selectedWorldId);
 
   const activeWorld =
-    visualWorlds.find((world) => world.id === activeWorldId) ??
-    visualWorlds[0];
+    visualWorlds.find(
+      (world) => world.id === activeWorldId
+    ) ?? visualWorlds[0];
 
-  const isSelected = (id: string) =>
-    selectedWorlds.includes(id);
-
-  const canSelectMore = selectedWorlds.length < 3;
-
-  const selectedWorldData = useMemo(
-    () =>
-      selectedWorlds
-        .map((id) =>
-          visualWorlds.find((world) => world.id === id)
-        )
-        .filter(Boolean),
-    [selectedWorlds]
-  );
-
-  function handleWorldClick(id: string) {
+  /*
+   * انتخاب دنیا
+   *
+   * مهم:
+   * دیگر toggle یا انتخاب چندتایی نداریم.
+   * هر بار فقط همان یک دنیا انتخاب می‌شود.
+   */
+  function handleWorldSelect(id: string) {
     setActiveWorldId(id);
 
-    if (selectedWorlds.includes(id)) {
-        setWorlds(
-          selectedWorlds.filter((worldId) => worldId !== id)
-        );
-
-      return;
-    }
-
-    if (!canSelectMore) {
-      return;
-    }
-
-    setWorlds([
-      ...selectedWorlds,
-      id,
-    ]);
+    // فقط یک ID ذخیره می‌شود
+    setWorlds([id]);
   }
 
-  const isComplete = selectedWorlds.length === 3;
+  /*
+   * فقط وقتی یک دنیا انتخاب شده باشد
+   * دکمه ادامه فعال است.
+   */
+  const isComplete =
+    Boolean(activeWorldId) &&
+    Boolean(
+      preferences.worlds?.length
+    );
+
+  if (!activeWorld) {
+    return null;
+  }
 
   return (
     <main
       dir="rtl"
-      className="relative min-h-screen overflow-hidden bg-[#070707] text-white"
+      className="relative min-h-screen overflow-hidden bg-black text-white"
     >
-      {/* BACKGROUND */}
-      <motion.div
-        className="pointer-events-none absolute inset-0"
-        animate={{
-          background:
-            activeWorld?.gradient ??
-            "linear-gradient(145deg, #090909, #17130A, #33270C)",
-        }}
-        transition={{
-          duration: 1.2,
-          ease: "easeInOut",
-        }}
-        style={{
-          opacity: 0.38,
-        }}
-      />
+      {/* =====================================================
+          BACKGROUND
+      ====================================================== */}
 
-      {/* DARK OVERLAY */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.55)_75%)]" />
+      <div className="pointer-events-none fixed inset-0">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeWorld.id}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={activeWorld.image}
+              alt=""
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
+            />
+          </motion.div>
+        </AnimatePresence>
 
-      {/* CONTENT */}
+        {/* خوانایی متن بدون تار کردن تصویر */}
+        <div className="absolute inset-0 bg-black/35" />
+
+        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/75" />
+      </div>
+
+      {/* =====================================================
+          CONTENT
+      ====================================================== */}
+
       <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-10 sm:px-8 lg:px-12">
-        
-        {/* TOP LABEL */}
+        {/* =================================================
+            HEADER
+        ================================================== */}
+
         <div className="mb-8 text-center">
           <motion.span
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{
+              opacity: 0,
+              y: 10,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
             className="text-xs tracking-[0.35em] text-[#D4AF37]"
           >
             انتخاب دوم
           </motion.span>
 
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 }}
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              delay: 0.08,
+            }}
             className="mt-4 text-4xl font-semibold tracking-tight text-[#F8F3E9] sm:text-5xl lg:text-6xl"
           >
             اگر می‌توانستی
             <br />
+
             <span className="text-[#D4AF37]">
               امشب جایی باشی...
             </span>
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/55 sm:text-base"
+            initial={{
+              opacity: 0,
+            }}
+            animate={{
+              opacity: 1,
+            }}
+            transition={{
+              delay: 0.2,
+            }}
+            className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/65 sm:text-base"
           >
-            سه دنیا را انتخاب کن.
+            فقط یک دنیا را انتخاب کن.
             <br />
-            لازم نیست به چیزی فکر کنی؛
-            فقط ببین کدام تصویر بیشتر با حال دلت جور است.
+            جایی را انتخاب کن که بیشتر از همه
+            با حال دلت جور است.
           </motion.p>
         </div>
 
-        {/* MAIN VISUAL */}
-        <div className="relative mx-auto w-full max-w-5xl">
+        {/* =================================================
+            MAIN IMAGE
+        ================================================== */}
+
+        <div className="relative mx-auto w-full max-w-6xl">
           <motion.div
             layout
-            className="relative overflow-hidden rounded-[2rem] border border-white/15 bg-white/[0.05] p-2 shadow-2xl backdrop-blur-xl"
+            className="relative overflow-hidden rounded-[2rem] border border-white/20 bg-black/20 p-2 shadow-2xl"
           >
             <div className="relative aspect-[16/9] overflow-hidden rounded-[1.5rem]">
               <AnimatePresence mode="wait">
                 <motion.div
-                 key={activeWorld?.id}
-                 initial={{
-                    opacity: 0,
-                    scale: 1.08,
-                 }}
-                 animate={{
-                    opacity: 1,
-                    scale: 1,
-                 }}
-                 exit={{
-                    opacity: 0,
-                    scale: 0.98,
-                 }}
-                 transition={{
-                    duration: 0.8,
-                    ease: "easeOut",
-                 }}
-                 className="absolute inset-0"
-                >
-                <Image
-                 src={activeWorld?.image ?? ""}
-                 alt={activeWorld?.title ?? ""}
-                 fill
-                 priority
-                 sizes="(max-width: 768px) 100vw, 1200px"
-                 className="object-cover"
-                />
-               </motion.div>
-              </AnimatePresence>
-
-              {/* IMAGE GRADIENT */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/20" />
-
-              {/* WORLD INFO */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeWorld?.id}
+                  key={activeWorld.id}
                   initial={{
                     opacity: 0,
-                    y: 20,
+                    scale: 1.02,
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    scale: 1,
+                  }}
+                  transition={{
+                    duration: 0.7,
+                    ease: "easeOut",
+                  }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src={activeWorld.image}
+                    alt={activeWorld.title}
+                    fill
+                    priority
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 90vw, 1200px"
+                    className="object-cover object-center"
+                  />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* فقط برای خوانایی پایین تصویر */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
+
+              {/* اطلاعات تصویر */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeWorld.id}
+                  initial={{
+                    opacity: 0,
+                    y: 15,
                   }}
                   animate={{
                     opacity: 1,
@@ -187,41 +223,29 @@ export default function WorldGallery({
                     y: -10,
                   }}
                   transition={{
-                    duration: 0.5,
+                    duration: 0.45,
                   }}
                   className="absolute inset-x-0 bottom-0 p-6 sm:p-8 lg:p-10"
                 >
                   <div className="flex items-end justify-between gap-5">
                     <div>
                       <div className="mb-3 text-3xl">
-                        {activeWorld?.emoji}
+                        {activeWorld.emoji}
                       </div>
 
                       <h2 className="text-2xl font-semibold text-white sm:text-3xl lg:text-4xl">
-                        {activeWorld?.title}
+                        {activeWorld.title}
                       </h2>
 
-                      <p className="mt-2 text-sm text-white/65 sm:text-base">
-                        {activeWorld?.subtitle}
+                      <p className="mt-2 text-sm text-white/70 sm:text-base">
+                        {activeWorld.subtitle}
                       </p>
                     </div>
 
-                    {activeWorld &&
-                      isSelected(activeWorld.id) && (
-                        <motion.div
-                          initial={{
-                            scale: 0,
-                            opacity: 0,
-                          }}
-                          animate={{
-                            scale: 1,
-                            opacity: 1,
-                          }}
-                          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/15 text-sm backdrop-blur-md"
-                        >
-                          ✓
-                        </motion.div>
-                      )}
+                    {/* انتخاب شده */}
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/60 bg-black/40 text-[#D4AF37] shadow-xl backdrop-blur-md">
+                      ✓
+                    </div>
                   </div>
                 </motion.div>
               </AnimatePresence>
@@ -229,38 +253,38 @@ export default function WorldGallery({
           </motion.div>
         </div>
 
-        {/* COUNTER */}
-        <div className="mt-7 text-center">
-          <span className="text-sm text-white/45">
-            دنیای انتخاب‌شده
-          </span>
+        {/* =================================================
+            SELECTED INDICATOR
+        ================================================== */}
 
-          <div className="mt-2 text-xl font-medium">
+        <div className="mt-7 flex justify-center">
+          <div className="flex items-center gap-3 rounded-full border border-white/15 bg-black/30 px-5 py-2.5 text-sm text-white/70 backdrop-blur-md">
             <span className="text-[#D4AF37]">
-              {selectedWorlds.length}
+              ✓
             </span>
-            <span className="mx-1 text-white/25">
-              /
-            </span>
-            <span className="text-white/60">
-              ۳
+
+            <span>
+              یک دنیا انتخاب شده
             </span>
           </div>
         </div>
 
-        {/* WORLD STRIP */}
+        {/* =================================================
+            WORLD STRIP
+        ================================================== */}
+
         <div className="mt-7 overflow-x-auto pb-4">
           <div className="mx-auto flex w-max gap-3 px-2">
             {visualWorlds.map((world) => {
-              const selected = isSelected(world.id);
-              const active = activeWorld?.id === world.id;
+              const selected =
+                activeWorld.id === world.id;
 
               return (
                 <motion.button
                   key={world.id}
                   type="button"
                   onClick={() =>
-                    handleWorldClick(world.id)
+                    handleWorldSelect(world.id)
                   }
                   whileHover={{
                     y: -5,
@@ -268,25 +292,31 @@ export default function WorldGallery({
                   whileTap={{
                     scale: 0.96,
                   }}
-                  className={`group relative h-24 w-32 shrink-0 overflow-hidden rounded-2xl border transition-all duration-300 sm:h-28 sm:w-40 ${
-                    active
-                      ? "border-white/60 shadow-[0_0_30px_rgba(255,255,255,0.12)]"
-                      : "border-white/10"
+                  className={`group relative h-24 w-36 shrink-0 overflow-hidden rounded-2xl border transition-all duration-300 sm:h-28 sm:w-44 ${
+                    selected
+                      ? "border-[#D4AF37]/80 shadow-[0_0_35px_rgba(212,175,55,0.22)]"
+                      : "border-white/15"
                   }`}
                 >
-                <Image
+                  <Image
                     src={world.image}
                     alt={world.title}
                     fill
-                    sizes="(max-width: 768px) 128px, 160px"
+                    sizes="176px"
                     className={`object-cover transition duration-500 ${
-                        active
-                        ? "scale-110"
-                        : "scale-100 group-hover:scale-110"
+                      selected
+                        ? "scale-105"
+                        : "scale-100 group-hover:scale-105"
                     }`}
-                />
+                  />
 
-                  <div className="absolute inset-0 bg-black/40 transition group-hover:bg-black/25" />
+                  <div
+                    className={`absolute inset-0 transition ${
+                      selected
+                        ? "bg-black/20"
+                        : "bg-black/45 group-hover:bg-black/25"
+                    }`}
+                  />
 
                   <div className="absolute inset-x-0 bottom-0 p-2 text-right">
                     <div className="text-xs font-medium text-white">
@@ -296,8 +326,15 @@ export default function WorldGallery({
 
                   {selected && (
                     <motion.div
-                      layoutId={`selected-${world.id}`}
-                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-white/40 bg-black/35 text-xs backdrop-blur-md"
+                      initial={{
+                        scale: 0,
+                        opacity: 0,
+                      }}
+                      animate={{
+                        scale: 1,
+                        opacity: 1,
+                      }}
+                      className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[#D4AF37]/70 bg-black/50 text-xs text-[#D4AF37] backdrop-blur-md"
                     >
                       ✓
                     </motion.div>
@@ -308,37 +345,14 @@ export default function WorldGallery({
           </div>
         </div>
 
-        {/* SELECTED WORLDS */}
-        <div className="mt-5 flex min-h-10 justify-center gap-2">
-          {selectedWorldData.map((world, index) => (
-            <motion.div
-              key={world?.id}
-              initial={{
-                opacity: 0,
-                scale: 0.7,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-              }}
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs text-white/65 backdrop-blur-md"
-            >
-              <span>
-                {world?.emoji}
-              </span>
+        {/* =================================================
+            NEXT
+        ================================================== */}
 
-              <span>
-                {String(index + 1).padStart(2, "0")}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* NEXT */}
         <motion.div
           initial={false}
           animate={{
-            opacity: isComplete ? 1 : 0.35,
+            opacity: isComplete ? 1 : 0.4,
             y: isComplete ? 0 : 5,
           }}
           className="mt-8 flex justify-center"
@@ -346,9 +360,15 @@ export default function WorldGallery({
           <motion.button
             type="button"
             disabled={!isComplete}
-            onClick={() =>
-              onComplete(selectedWorlds)
-            }
+            onClick={() => {
+              if (!activeWorldId) return;
+
+              /*
+               * تضمین می‌کنیم فقط یک world
+               * به مرحله بعد ارسال شود.
+               */
+              onComplete([activeWorldId]);
+            }}
             whileHover={
               isComplete
                 ? {
@@ -363,18 +383,15 @@ export default function WorldGallery({
                   }
                 : undefined
             }
-            className="rounded-full border border-[#D4AF37]/50 bg-black/20 px-8 py-3.5 text-sm text-[#D4AF37] backdrop-blur-xl transition hover:bg-[#D4AF37]/10 disabled:cursor-not-allowed"
+            className="rounded-full border border-[#D4AF37]/55 bg-black/30 px-8 py-3.5 text-sm font-medium text-[#D4AF37] shadow-xl backdrop-blur-md transition hover:bg-[#D4AF37]/10 disabled:cursor-not-allowed"
           >
-            {isComplete
-              ? "این سه دنیا را انتخاب کردم"
-              : `هنوز ${3 - selectedWorlds.length} انتخاب باقی مانده`}
+            این دنیا را انتخاب کردم
 
             <span className="mr-3">
               ←
             </span>
           </motion.button>
         </motion.div>
-
       </section>
     </main>
   );

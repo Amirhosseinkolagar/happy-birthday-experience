@@ -19,6 +19,7 @@ const initialPreferences: UserPreferences = {
   emotions: [],
   symbols: [],
   secretSymbol: null,
+  profile: null,
 };
 
 type ExperienceContextValue = {
@@ -31,6 +32,9 @@ type ExperienceContextValue = {
   setEmotions: (emotions: string[]) => void;
   setSymbols: (symbols: string[]) => void;
   setSecretSymbol: (symbol: string | null) => void;
+  setProfile: (
+    profile: UserPreferences["profile"]
+  ) => void;
 
   resetExperience: () => void;
 };
@@ -48,53 +52,81 @@ export function ExperienceProvider({
   const [preferences, setPreferences] =
     useState<UserPreferences>(initialPreferences);
 
-  const setColors = useCallback((colors: string[]) => {
-    setPreferences((current) => ({
-      ...current,
-      colors,
-    }));
-  }, []);
+  const setColors = useCallback(
+    (colors: string[]) => {
+      setPreferences((current) => ({
+        ...current,
+        colors,
+      }));
+    },
+    []
+  );
 
-  const setWorlds = useCallback((worlds: string[]) => {
-    setPreferences((current) => ({
-      ...current,
-      worlds,
-    }));
-  }, []);
+  const setWorlds = useCallback(
+    (worlds: string[]) => {
+      setPreferences((current) => ({
+        ...current,
+        worlds,
+      }));
+    },
+    []
+  );
 
-  const setMusic = useCallback((music: string[]) => {
-    setPreferences((current) => ({
-      ...current,
-      music,
-    }));
-  }, []);
+  const setMusic = useCallback(
+    (music: string[]) => {
+      setPreferences((current) => ({
+        ...current,
+        music,
+      }));
+    },
+    []
+  );
 
-  const setLighting = useCallback((lighting: string) => {
-    setPreferences((current) => ({
-      ...current,
-      lighting,
-    }));
-  }, []);
+  const setLighting = useCallback(
+    (lighting: string) => {
+      setPreferences((current) => ({
+        ...current,
+        lighting,
+      }));
+    },
+    []
+  );
 
-  const setEmotions = useCallback((emotions: string[]) => {
-    setPreferences((current) => ({
-      ...current,
-      emotions,
-    }));
-  }, []);
+  const setEmotions = useCallback(
+    (emotions: string[]) => {
+      setPreferences((current) => ({
+        ...current,
+        emotions,
+      }));
+    },
+    []
+  );
 
-  const setSymbols = useCallback((symbols: string[]) => {
-    setPreferences((current) => ({
-      ...current,
-      symbols,
-    }));
-  }, []);
+  const setSymbols = useCallback(
+    (symbols: string[]) => {
+      setPreferences((current) => ({
+        ...current,
+        symbols,
+      }));
+    },
+    []
+  );
 
   const setSecretSymbol = useCallback(
     (secretSymbol: string | null) => {
       setPreferences((current) => ({
         ...current,
         secretSymbol,
+      }));
+    },
+    []
+  );
+
+  const setProfile = useCallback(
+    (profile: UserPreferences["profile"]) => {
+      setPreferences((current) => ({
+        ...current,
+        profile,
       }));
     },
     []
@@ -107,6 +139,7 @@ export function ExperienceProvider({
   const value = useMemo(
     () => ({
       preferences,
+
       setColors,
       setWorlds,
       setMusic,
@@ -114,6 +147,8 @@ export function ExperienceProvider({
       setEmotions,
       setSymbols,
       setSecretSymbol,
+      setProfile,
+
       resetExperience,
     }),
     [
@@ -125,6 +160,7 @@ export function ExperienceProvider({
       setEmotions,
       setSymbols,
       setSecretSymbol,
+      setProfile,
       resetExperience,
     ]
   );

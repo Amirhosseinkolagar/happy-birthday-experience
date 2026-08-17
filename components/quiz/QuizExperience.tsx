@@ -1,10 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import {
+  useMemo,
+  useState,
+  type CSSProperties,
+} from "react";
+
 import { motion } from "motion/react";
 
 import { colors } from "@/data/colors";
 import { useExperience } from "@/hooks/useExperience";
+import { useExperienceAudio } from "@/src/components/audio/ExperienceAudioManager";
 import { buildExperienceTheme } from "@/lib/experienceEngine";
 
 import ColorUniverse from "./ColorUniverse";
@@ -15,14 +21,33 @@ import EmotionGallery from "./EmotionGallery";
 import MusicGallery from "./MusicGallery";
 import LightingGallery from "./LightingGallery";
 import SymbolGallery from "./SymbolGallery";
+
 import FinalExperience from "../experience/FinalExperience";
+import ExperienceCredits from "../experience/ExperienceCredits";
 
+type QuizStep =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7;
 
-type QuizStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+const FINAL_AUDIO_DELAY = 2000;
 
 export default function QuizExperience() {
-  const [step, setStep] = useState<QuizStep>(1);
-  const [colorsRevealed, setColorsRevealed] = useState(false);
+  const [step, setStep] =
+    useState<QuizStep>(1);
+
+  const [colorsRevealed, setColorsRevealed] =
+    useState(false);
+
+  const [showCredits, setShowCredits] =
+    useState(false);
+
+  const [preparingFinal, setPreparingFinal] =
+    useState(false);
 
   const {
     preferences,
@@ -34,37 +59,81 @@ export default function QuizExperience() {
     setSymbols,
   } = useExperience();
 
-  const selectedColors = preferences.colors;
+  const {
+    fadeOut,
+  } = useExperienceAudio();
 
-  const selectedColorValues = useMemo(() => {
-    return selectedColors
-      .map((id) => colors.find((color) => color.id === id))
-      .filter(Boolean);
-  }, [selectedColors]);
+  /*
+   * =======================================================
+   * COLORS
+   * =======================================================
+   */
 
-  const colorsComplete = selectedColors.length === 4;
+  const selectedColors =
+    preferences.colors;
+
+  const selectedColorValues =
+    useMemo(() => {
+      return selectedColors
+        .map((id) =>
+          colors.find(
+            (color) =>
+              color.id === id
+          )
+        )
+        .filter(
+          (
+            color
+          ): color is NonNullable<
+            typeof color
+          > => Boolean(color)
+        );
+    }, [selectedColors]);
+
+  const colorsComplete =
+    selectedColors.length === 3;
 
   const primary =
-    selectedColorValues[0]?.value ?? "#D4AF37";
+    selectedColorValues[0]?.value ??
+    "#D4AF37";
 
   const secondary =
-    selectedColorValues[1]?.value ?? "#6E5D3C";
+    selectedColorValues[1]?.value ??
+    "#6E5D3C";
 
   const accent =
-    selectedColorValues[2]?.value ?? "#D4AF37";
+    selectedColorValues[2]?.value ??
+    "#D4AF37";
 
-  function handleColorsChange(nextColors: string[]) {
+  /*
+   * =======================================================
+   * COLOR CHANGE
+   * =======================================================
+   */
+
+  function handleColorsChange(
+    nextColors: string[]
+  ) {
     setColors(nextColors);
+
     setColorsRevealed(false);
 
-    if (nextColors.length === 4) {
-      setTimeout(() => {
+    if (nextColors.length === 3) {
+      window.setTimeout(() => {
         setColorsRevealed(true);
       }, 850);
     }
   }
 
-  function handleWorldsComplete(worldIds: string[]) {
+  /*
+   * =======================================================
+   * WORLD
+   * =======================================================
+   */
+
+  function handleWorldsComplete(
+    worldIds: string[]
+  ) {
     const nextPreferences = {
       ...preferences,
       worlds: worldIds,
@@ -72,9 +141,11 @@ export default function QuizExperience() {
 
     setWorlds(worldIds);
 
-    const theme = buildExperienceTheme(
-      nextPreferences
-    );
+    const theme =
+      buildExperienceTheme({
+        preferences:
+          nextPreferences,
+      });
 
     console.log(
       "Experience preferences:",
@@ -89,39 +160,152 @@ export default function QuizExperience() {
     setStep(3);
   }
 
-  function handleEmotionComplete(emotionIds: string[]) {
-    setEmotions(emotionIds);
+  /*
+   * =======================================================
+   * EMOTION
+   * =======================================================
+   */
 
-    console.log("Selected emotions:", emotionIds);
+  function handleEmotionComplete(
+    emotionIds: string[]
+  ) {
+    setEmotions(
+      emotionIds
+    );
+
+    console.log(
+      "Selected emotions:",
+      emotionIds
+    );
 
     setStep(4);
   }
 
-  function handleMusicComplete(musicIds: string[]) {
-    setMusic(musicIds);
+  /*
+   * =======================================================
+   * MUSIC
+   * =======================================================
+   */
 
-    console.log("Selected music:", musicIds);
+  function handleMusicComplete(
+    musicIds: string[]
+  ) {
+    setMusic(
+      musicIds
+    );
+
+    console.log(
+      "Selected music:",
+      musicIds
+    );
 
     setStep(5);
   }
 
-  function handleLightingComplete(lightingId: string) {
-    setLighting(lightingId);
+  /*
+   * =======================================================
+   * LIGHTING
+   * =======================================================
+   */
 
-    console.log("Selected lighting:", lightingId);
+  function handleLightingComplete(
+    lightingId: string
+  ) {
+    setLighting(
+      lightingId
+    );
+
+    console.log(
+      "Selected lighting:",
+      lightingId
+    );
 
     setStep(6);
   }
 
-  function handleSymbolsComplete(symbolIds: string[]) {
-    setSymbols(symbolIds);
+  /*
+   * =======================================================
+   * SYMBOL
+   * =======================================================
+   *
+   * بعد از انتخاب Symbol:
+   *
+   * Symbol
+   *    ↓
+   *  2 seconds
+   *    ↓
+   * Background Music Fade Out
+   *    ↓
+   * FinalExperience
+   *
+   * =======================================================
+   */
 
-    console.log("Selected symbols:", symbolIds);
+  async function handleSymbolsComplete(
+    symbolIds: string[]
+  ) {
+    if (preparingFinal) {
+      return;
+    }
+
+    setSymbols(
+      symbolIds
+    );
+
+    console.log(
+      "Selected symbols:",
+      symbolIds
+    );
+
+    setPreparingFinal(true);
+
+    /*
+     * -------------------------------------------------------
+     * اجازه می‌دهیم آخرین بخش SymbolExperience
+     * کمی روی صفحه بماند.
+     * -------------------------------------------------------
+     */
+
+    await new Promise<void>(
+      (resolve) => {
+        window.setTimeout(
+          resolve,
+          FINAL_AUDIO_DELAY
+        );
+      }
+    );
+
+    /*
+     * -------------------------------------------------------
+     * حالا موزیک Background را کامل Fade Out می‌کنیم.
+     *
+     * stopAfter = true
+     *
+     * یعنی بعد از Fade Out:
+     *
+     * pause()
+     * currentTime = 0
+     *
+     * -------------------------------------------------------
+     */
+
+    await fadeOut(true);
+
+    /*
+     * -------------------------------------------------------
+     * فقط بعد از قطع کامل موزیک وارد Final می‌شویم.
+     * -------------------------------------------------------
+     */
 
     setStep(7);
+    setPreparingFinal(false);
   }
 
-  
+  /*
+   * =======================================================
+   * NEXT
+   * =======================================================
+   */
 
   function handleNextStep() {
     if (!colorsRevealed) {
@@ -131,72 +315,224 @@ export default function QuizExperience() {
     setStep(2);
   }
 
-  if (step === 2) {
+  /*
+   * =======================================================
+   * CREDITS
+   * =======================================================
+   */
+
+  if (showCredits) {
     return (
-      <WorldGallery
-        onComplete={handleWorldsComplete}
+      <ExperienceCredits
+        onHome={() => {
+          window.location.reload();
+        }}
       />
     );
   }
+
+  /*
+   * =======================================================
+   * FINAL PREPARATION
+   * =======================================================
+   */
+
+  if (preparingFinal) {
+    return (
+      <main
+        className="quiz-screen final-preparing-screen"
+        aria-label="Preparing final experience"
+      >
+        <div className="color-orbit color-orbit-one" />
+        <div className="color-orbit color-orbit-two" />
+
+        <section
+          style={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            padding: 24,
+          }}
+        >
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 20,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            transition={{
+              duration: 0.8,
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                opacity: 0.6,
+                fontSize: 13,
+                letterSpacing: 3,
+              }}
+            >
+              YOUR STORY
+            </p>
+
+            <h1
+              style={{
+                marginTop: 18,
+                marginBottom: 0,
+                fontSize:
+                  "clamp(28px, 5vw, 56px)",
+                fontWeight: 400,
+              }}
+            >
+              لحظه‌ی تو نزدیک است...
+            </h1>
+          </motion.div>
+        </section>
+      </main>
+    );
+  }
+
+  /*
+   * =======================================================
+   * STEP 2 — WORLD
+   * =======================================================
+   */
+
+  if (step === 2) {
+    return (
+      <WorldGallery
+        onComplete={
+          handleWorldsComplete
+        }
+      />
+    );
+  }
+
+  /*
+   * =======================================================
+   * STEP 3 — EMOTION
+   * =======================================================
+   */
 
   if (step === 3) {
     return (
       <EmotionGallery
-      selectedEmotions={preferences.emotions}
-      onComplete={handleEmotionComplete}
+        selectedEmotions={
+          preferences.emotions
+        }
+        onComplete={
+          handleEmotionComplete
+        }
       />
     );
   }
+
+  /*
+   * =======================================================
+   * STEP 4 — MUSIC
+   * =======================================================
+   */
 
   if (step === 4) {
     return (
       <MusicGallery
-        selectedMusic={preferences.music}
-        onComplete={handleMusicComplete}
+        selectedMusic={
+          preferences.music
+        }
+        onComplete={
+          handleMusicComplete
+        }
       />
     );
   }
+
+  /*
+   * =======================================================
+   * STEP 5 — LIGHTING
+   * =======================================================
+   */
 
   if (step === 5) {
     return (
       <LightingGallery
-        selectedLighting={preferences.lighting}
-        onComplete={handleLightingComplete}
+        selectedLighting={
+          preferences.lighting
+        }
+        onComplete={
+          handleLightingComplete
+        }
       />
     );
   }
+
+  /*
+   * =======================================================
+   * STEP 6 — SYMBOL
+   * =======================================================
+   */
 
   if (step === 6) {
     return (
       <SymbolGallery
-        selectedSymbols={preferences.symbols}
-        onChange={setSymbols}
-        onComplete={handleSymbolsComplete}
+        selectedSymbols={
+          preferences.symbols
+        }
+        onChange={
+          setSymbols
+        }
+        onComplete={
+          handleSymbolsComplete
+        }
       />
     );
   }
 
+  /*
+   * =======================================================
+   * STEP 7 — FINAL EXPERIENCE
+   * =======================================================
+   */
+
   if (step === 7) {
-  return (
-    <FinalExperience
-      preferences={preferences}
-    />
-  );
-}
+    return (
+      <FinalExperience
+        onFinish={() => {
+          setShowCredits(true);
+        }}
+      />
+    );
+  }
+
+  /*
+   * =======================================================
+   * COLOR QUIZ
+   * =======================================================
+   */
+
+  const quizStyle: CSSProperties & {
+    "--primary": string;
+    "--secondary": string;
+    "--accent": string;
+  } = {
+    "--primary": primary,
+    "--secondary": secondary,
+    "--accent": accent,
+  };
 
   return (
     <main
       dir="rtl"
       className={`quiz-screen ${
-        colorsComplete ? "is-complete" : ""
+        colorsComplete
+          ? "is-complete"
+          : ""
       }`}
-      style={
-        {
-          "--primary": primary,
-          "--secondary": secondary,
-          "--accent": accent,
-        } as React.CSSProperties
-      }
+      style={quizStyle}
     >
       <div className="color-orbit color-orbit-one" />
       <div className="color-orbit color-orbit-two" />
@@ -207,8 +543,8 @@ export default function QuizExperience() {
       />
 
       <section className="quiz-content">
-
         {/* HEADER */}
+
         <motion.div
           className="quiz-heading"
           layout
@@ -229,20 +565,20 @@ export default function QuizExperience() {
             layout
           >
             {colorsRevealed
-              ? "پالت تو آماده‌ست"
-              : "انتخاب اول"}
+              ? "مرحله اول کامل شد"
+              : "ردپای اول تو"}
           </motion.span>
 
           <motion.h1 layout>
             {colorsRevealed
-              ? "پالتت شکل گرفت..."
-              : "اولین چیزی که انتخاب می‌کنی، یک رنگه"}
+              ? "این سه رنگ، تصادفی انتخاب نشدن..."
+              : "اگر حالِ این روزهایت یک رنگ بود، چه رنگی بود؟"}
           </motion.h1>
 
           <motion.p layout>
             {colorsRevealed
-              ? "چهار انتخاب تو، اولین تکه از این تجربه را ساختند."
-              : "چهار رنگ را انتخاب کن؛ بدون فکر زیاد. فقط ببین کدام رنگ بیشتر صدایت می‌کند."}
+              ? "حالا یک تکه از شخصیت این تجربه را می‌شناسیم."
+              : "از بین ۱۸۰ رنگ، فقط سه تا را انتخاب کن. نه منطقی، نه درست یا غلط؛ فقط آن‌هایی که یک لحظه بیشتر نگاهت را نگه می‌دارند."}
           </motion.p>
 
           <motion.span
@@ -250,19 +586,25 @@ export default function QuizExperience() {
             layout
           >
             {colorsRevealed
-              ? "حالا بریم سراغ دنیایی که بیشتر شبیه توئه..."
-              : "انتخابت را جدی نگیر؛ فقط به حست اعتماد کن."}
+              ? "اما این فقط اولین سرنخه..."
+              : "سه رنگ انتخاب کن؛ بعد می‌فهمی چرا همین سه تا."}
           </motion.span>
         </motion.div>
 
         {/* COLOR PANEL */}
-        <div className="color-selection-stage">
 
+        <div className="color-selection-stage">
           <motion.div
             className="glass-panel-glow"
             animate={{
-              scale: colorsComplete ? 1.12 : 1,
-              opacity: colorsComplete ? 1 : 0.65,
+              scale:
+                colorsComplete
+                  ? 1.12
+                  : 1,
+              opacity:
+                colorsComplete
+                  ? 1
+                  : 0.65,
             }}
             transition={{
               duration: 1.2,
@@ -272,18 +614,18 @@ export default function QuizExperience() {
           <motion.div
             className="color-panel"
             animate={{
-              borderColor: colorsComplete
-                ? "rgba(255,255,255,0.24)"
-                : "rgba(255,255,255,0.13)",
+              borderColor:
+                colorsComplete
+                  ? "rgba(255,255,255,0.24)"
+                  : "rgba(255,255,255,0.13)",
             }}
             transition={{
               duration: 0.8,
             }}
           >
-
             {/* PANEL HEADER */}
-            <div className="color-panel-header">
 
+            <div className="color-panel-header">
               <span>
                 {colorsRevealed
                   ? "ترکیب انتخاب‌های تو"
@@ -291,29 +633,42 @@ export default function QuizExperience() {
               </span>
 
               <SelectionCounter
-                selected={selectedColors.length}
-                max={4}
+                selected={
+                  selectedColors.length
+                }
+                max={3}
               />
-
             </div>
 
             {/* MINI PALETTE */}
+
             <motion.div
               className="mini-palette"
               initial={false}
               animate={{
-                opacity: colorsComplete ? 1 : 0,
-                y: colorsComplete ? 0 : -8,
+                opacity:
+                  colorsComplete
+                    ? 1
+                    : 0,
+                y:
+                  colorsComplete
+                    ? 0
+                    : -8,
               }}
             >
               {selectedColorValues.map(
-                (color, index) => (
+                (
+                  color,
+                  index
+                ) => (
                   <motion.div
-                    key={color?.id}
+                    key={
+                      color.id
+                    }
                     className="mini-color"
                     style={{
                       background:
-                        color?.value,
+                        color.value,
                     }}
                     initial={{
                       scale: 0,
@@ -324,14 +679,21 @@ export default function QuizExperience() {
                       opacity: 1,
                     }}
                     transition={{
-                      delay: index * 0.12,
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 16,
+                      delay:
+                        index *
+                        0.12,
+                      type:
+                        "spring",
+                      stiffness:
+                        260,
+                      damping:
+                        16,
                     }}
                   >
                     <span>
-                      {String(index + 1).padStart(
+                      {String(
+                        index + 1
+                      ).padStart(
                         2,
                         "0"
                       )}
@@ -342,34 +704,48 @@ export default function QuizExperience() {
             </motion.div>
 
             {/* COLORS */}
+
             <ColorUniverse
-              selectedColors={selectedColors}
-              onChange={handleColorsChange}
+              selectedColors={
+                selectedColors
+              }
+              onChange={
+                handleColorsChange
+              }
             />
+
+            {/* FOOTER */}
 
             <motion.p
               className="color-panel-footer"
               animate={{
-                opacity: colorsRevealed
-                  ? 0.55
-                  : 0.3,
+                opacity:
+                  colorsRevealed
+                    ? 0.55
+                    : 0.3,
               }}
             >
               {colorsRevealed
                 ? "این فقط شروع ماجراست."
                 : "انتخاب‌هایت قرار است فضای این تجربه را بسازند."}
             </motion.p>
-
           </motion.div>
         </div>
 
         {/* COMPLETE MESSAGE */}
+
         <motion.div
           className="completion-message"
           initial={false}
           animate={{
-            opacity: colorsRevealed ? 1 : 0,
-            y: colorsRevealed ? 0 : 15,
+            opacity:
+              colorsRevealed
+                ? 1
+                : 0,
+            y:
+              colorsRevealed
+                ? 0
+                : 15,
           }}
           transition={{
             duration: 0.7,
@@ -378,7 +754,7 @@ export default function QuizExperience() {
           <span className="completion-line" />
 
           <span>
-            چهار انتخاب.
+            سه انتخاب.
             <br />
             یک پالت کاملاً مخصوص تو.
           </span>
@@ -387,16 +763,30 @@ export default function QuizExperience() {
         </motion.div>
 
         {/* NEXT */}
+
         <motion.button
           type="button"
           className="quiz-next-button"
-          disabled={!colorsRevealed}
-          onClick={handleNextStep}
+          disabled={
+            !colorsRevealed
+          }
+          onClick={
+            handleNextStep
+          }
           initial={false}
           animate={{
-            opacity: colorsRevealed ? 1 : 0,
-            y: colorsRevealed ? 0 : 12,
-            scale: colorsRevealed ? 1 : 0.95,
+            opacity:
+              colorsRevealed
+                ? 1
+                : 0,
+            y:
+              colorsRevealed
+                ? 0
+                : 12,
+            scale:
+              colorsRevealed
+                ? 1
+                : 0.95,
           }}
           whileHover={
             colorsRevealed
@@ -415,9 +805,10 @@ export default function QuizExperience() {
         >
           کشف مرحله بعد
 
-          <span>←</span>
+          <span>
+            ←
+          </span>
         </motion.button>
-
       </section>
     </main>
   );

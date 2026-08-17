@@ -6,32 +6,92 @@ import type {
 import { colors } from "@/data/colors";
 import { visualWorlds } from "@/data/worlds";
 import { emotions } from "@/data/emotions";
+import { symbols } from "@/data/symbols";
 
-export function buildExperienceTheme(
-  preferences: UserPreferences
-): ExperienceTheme {
-  const selectedColors = preferences.colors
-    .map((id) => colors.find((color) => color.id === id))
-    .filter(Boolean);
+type BuildExperienceThemeInput = {
+  preferences?: Partial<UserPreferences> | null;
+};
 
-  const primary =
-    selectedColors[0]?.value ?? "#D4AF37";
+const fallbackPreferences: UserPreferences = {
+  colors: [],
+  worlds: [],
+  music: [],
+  lighting: "",
+  emotions: [],
+  symbols: [],
+  secretSymbol: null,
+  profile: null,
+};
 
-  const secondary =
-    selectedColors[1]?.softValue ?? "#6E5D3C";
+export function buildExperienceTheme({
+  preferences,
+}: BuildExperienceThemeInput): ExperienceTheme {
+  const safePreferences: UserPreferences = {
+    ...fallbackPreferences,
+    ...(preferences ?? {}),
 
-  const accent =
-    selectedColors[2]?.value ?? "#D4AF37";
+    colors: preferences?.colors ?? [],
+    worlds: preferences?.worlds ?? [],
+    music: preferences?.music ?? [],
+    lighting: preferences?.lighting ?? "",
+    emotions: preferences?.emotions ?? [],
+    symbols: preferences?.symbols ?? [],
+    secretSymbol:
+      preferences?.secretSymbol ?? null,
+    profile:
+      preferences?.profile ?? null,
+  };
 
-  const world =
+  const selectedColors = safePreferences.colors
+    .map((id) =>
+      colors.find(
+        (color) => color.id === id
+      )
+    )
+    .filter(
+      (
+        color
+      ): color is (typeof colors)[number] =>
+        Boolean(color)
+    );
+
+  const selectedWorld =
     visualWorlds.find(
-      (item) => item.id === preferences.worlds[0]
+      (world) =>
+        world.id ===
+        safePreferences.worlds[0]
     ) ?? visualWorlds[0];
 
-  const emotion =
+  const selectedEmotion =
     emotions.find(
-      (item) => item.id === preferences.emotions[0]
-    );
+      (emotion) =>
+        emotion.id ===
+        safePreferences.emotions[0]
+    ) ?? emotions[0];
+
+  const symbolId =
+    safePreferences.secretSymbol ??
+    safePreferences.symbols[0];
+
+  const selectedSymbol =
+    symbols.find(
+      (symbol) =>
+        symbol.id === symbolId
+    ) ?? symbols[0];
+
+  const primary =
+    selectedColors[0]?.value ??
+    "#D4AF37";
+
+  const secondary =
+    selectedColors[1]?.softValue ??
+    selectedColors[0]?.softValue ??
+    "#6E5D3C";
+
+  const accent =
+    selectedColors[2]?.value ??
+    selectedColors[0]?.value ??
+    "#D4AF37";
 
   return {
     primary,
@@ -39,21 +99,23 @@ export function buildExperienceTheme(
     accent,
 
     background:
-      world?.gradient ??
+      selectedWorld?.gradient ??
       "linear-gradient(145deg, #090909, #17130A, #33270C)",
 
     atmosphere:
-      world?.mood ?? "mysterious",
+      selectedWorld?.mood ??
+      "mysterious",
 
     lighting:
-      preferences.lighting || "soft",
+      safePreferences.lighting ||
+      "soft",
 
     emotion:
-      emotion?.id ?? "warm",
+      selectedEmotion?.id ??
+      "warm",
 
     symbol:
-      preferences.secretSymbol ??
-      preferences.symbols[0] ??
-      "spark",
+      selectedSymbol?.id ??
+      "sparkles",
   };
 }

@@ -9,7 +9,7 @@ type EmotionGalleryProps = {
   onComplete: (emotionIds: string[]) => void;
 };
 
-const MAX_SELECTIONS = 3;
+const MAX_SELECTIONS = 1;
 
 export default function EmotionGallery({
   selectedEmotions,
@@ -46,58 +46,97 @@ export default function EmotionGallery({
   return (
     <main
       dir="rtl"
-      className="relative min-h-screen overflow-hidden bg-[#070707] text-white"
+      className="emotion-experience"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.12),transparent_55%)]" />
+      {/* ATMOSPHERE */}
+      <div className="emotion-atmosphere" />
+      <div className="emotion-orbit emotion-orbit-one" />
+      <div className="emotion-orbit emotion-orbit-two" />
+      <div className="emotion-grain" />
 
-      <section className="relative z-10 mx-auto flex min-h-screen w-full max-w-6xl flex-col px-5 py-12 sm:px-8 lg:px-12">
+      <section className="emotion-shell">
+
+        {/* TOP PROGRESS */}
+        <div className="emotion-topbar">
+          <div>
+            <span className="emotion-step-label">
+              فصل سوم
+            </span>
+
+            <span className="emotion-step-title">
+              لایه‌ی احساس
+            </span>
+          </div>
+
+          <div className="emotion-progress">
+            <span className={localSelections.length >= 1 ? "active" : ""} />
+          </div>
+
+          <span className="emotion-counter">
+            {String(localSelections.length).padStart(2, "0")}
+            {" / "}
+            {String(MAX_SELECTIONS).padStart(2, "0")}
+          </span>
+        </div>
 
         {/* HEADER */}
-        <motion.div
+        <motion.header
+          className="emotion-heading"
           initial={{
             opacity: 0,
-            y: 24,
+            y: 28,
           }}
           animate={{
             opacity: 1,
             y: 0,
           }}
           transition={{
-            duration: 0.7,
+            duration: 0.8,
           }}
-          className="mb-12 text-center"
         >
-          <span className="text-xs tracking-[0.35em] text-[#D4AF37]">
-            انتخاب سوم
-          </span>
+          <motion.span
+            className="emotion-eyebrow"
+            initial={{
+              opacity: 0,
+              letterSpacing: "0.5em",
+            }}
+            animate={{
+              opacity: 1,
+              letterSpacing: "0.25em",
+            }}
+            transition={{
+              duration: 1,
+            }}
+          >
+            یک حس را انتخاب نمی‌کنی...
+          </motion.span>
 
-          <h1 className="mt-4 text-4xl font-semibold text-[#F8F3E9] sm:text-5xl">
-            این دنیا باید چه حسی داشته باشد؟
+          <h1>
+            ببین کدام لحظه
+            <br />
+            <em>بیشتر شبیه توست؟</em>
           </h1>
 
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/50 sm:text-base">
-            سه حسی را انتخاب کن که بیشتر دوست داری در تجربه‌ی
-            تو حضور داشته باشند.
+          <p>
+            این بار دنبال جواب درست نیستیم.
+            <br />
+            فقط یک تصویر را پیدا کن که وقتی می‌بینی،
+            چیزی درونت می‌گوید:
+            <strong> «همینه» </strong>
           </p>
 
-          {/* COUNTER */}
-          <motion.div
-            initial={false}
-            animate={{
-              opacity: isComplete ? 1 : 0.6,
-            }}
-            className="mt-6 text-sm text-[#D4AF37]"
-          >
-            {localSelections.length} از {MAX_SELECTIONS}
-          </motion.div>
-        </motion.div>
+          <div className="emotion-secret-hint">
+            <span />
+            انتخاب‌هایت بعداً معنی پیدا می‌کنند.
+            <span />
+          </div>
+        </motion.header>
 
-        {/* EMOTIONS */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* CARDS */}
+        <div className="emotion-grid">
           {emotions.map((emotion, index) => {
-            const selected = localSelections.includes(
-              emotion.id
-            );
+            const selected =
+              localSelections.includes(emotion.id);
 
             const disabled =
               !selected &&
@@ -106,29 +145,39 @@ export default function EmotionGallery({
             const selectionIndex =
               localSelections.indexOf(emotion.id);
 
+          
+
             return (
               <motion.button
                 key={emotion.id}
                 type="button"
                 disabled={disabled}
                 onClick={() => toggleEmotion(emotion.id)}
+                className={[
+                  "emotion-card",
+                  selected ? "is-selected" : "",
+                  disabled ? "is-disabled" : "",
+                ].join(" ")}
                 initial={{
                   opacity: 0,
-                  y: 20,
+                  y: 35,
+                  scale: 0.97,
                 }}
                 animate={{
-                  opacity: disabled ? 0.35 : 1,
+                  opacity: disabled ? 0.32 : 1,
                   y: 0,
+                  scale: selected ? 1.015 : 1,
                 }}
                 transition={{
-                  delay: index * 0.06,
-                  duration: 0.5,
+                  delay: index * 0.055,
+                  duration: 0.55,
                 }}
                 whileHover={
                   disabled
                     ? undefined
                     : {
-                        y: -6,
+                        y: -8,
+                        scale: 1.015,
                       }
                 }
                 whileTap={
@@ -138,70 +187,126 @@ export default function EmotionGallery({
                         scale: 0.97,
                       }
                 }
-                className={`group relative min-h-52 overflow-hidden rounded-3xl border p-6 text-right transition-all duration-300 ${
-                  selected
-                    ? "border-[#D4AF37]/70 bg-[#D4AF37]/10 shadow-[0_0_40px_rgba(212,175,55,0.12)]"
-                    : "border-white/10 bg-white/[0.035] hover:border-white/25 hover:bg-white/[0.06]"
-                }`}
               >
-                {/* SELECTION NUMBER */}
-                {selected && (
-                  <motion.div
-                    initial={{
-                      scale: 0,
-                      opacity: 0,
-                    }}
-                    animate={{
-                      scale: 1,
-                      opacity: 1,
-                    }}
-                    className="absolute left-5 top-5 flex h-8 w-8 items-center justify-center rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 text-sm text-[#D4AF37]"
-                  >
-                    {selectionIndex + 1}
-                  </motion.div>
-                )}
+                {/* VISUAL */}
+                  <div 
+                  className="emotion-visual"
+                  style={{
+                    backgroundImage: `url("${emotion.image}")`,
+                  }}
+                >
+                  <div className="emotion-visual-gradient" />
 
-                {/* EMOJI */}
-                <div className="mb-7 text-4xl">
-                  {emotion.emoji}
+                  <div className="emotion-visual-glow" />
+
+                  <div className="emotion-visual-symbol">
+                    {emotion.emoji}
+                  </div>
+
+                  
                 </div>
 
-                {/* TITLE */}
-                <h2 className="text-xl font-medium text-white">
-                  {emotion.title}
-                </h2>
+                {/* OVERLAY */}
+                <div className="emotion-card-overlay" />
 
-                {/* DESCRIPTION */}
-                <p className="mt-3 text-sm leading-7 text-white/45">
-                  {emotion.description}
-                </p>
+                {/* SELECTION */}
+                <div
+                  className={[
+                    "emotion-selection",
+                    selected ? "visible" : "",
+                  ].join(" ")}
+                >
+                  <span>
+                    {selected
+                      ? String(selectionIndex + 1).padStart(2, "0")
+                      : "+"}
+                  </span>
+                </div>
+
+                {/* TEXT */}
+                <div className="emotion-card-content">
+                  
+
+                  <h2>{emotion.title}</h2>
+
+                  <p>{emotion.description}</p>
+
+                </div>
               </motion.button>
             );
           })}
         </div>
 
-        {/* CONTINUE */}
+        {/* BOTTOM MESSAGE */}
         <motion.div
-          initial={false}
+          className="emotion-bottom"
           animate={{
-            opacity: isComplete ? 1 : 0.35,
-            y: isComplete ? 0 : 6,
+            opacity: isComplete ? 1 : 0.55,
           }}
-          className="mt-12 flex justify-center"
         >
-          <button
-            type="button"
-            disabled={!isComplete}
-            onClick={handleContinue}
-            className="rounded-full border border-[#D4AF37]/50 bg-black/20 px-8 py-3.5 text-sm text-[#D4AF37] backdrop-blur-xl transition hover:bg-[#D4AF37]/10 disabled:cursor-not-allowed"
-          >
-            ادامه
+          <div className="emotion-bottom-line" />
 
-            <span className="mr-3">
-              →
-            </span>
-          </button>
+          <div>
+            {isComplete ? (
+              <>
+
+                <strong>
+                  شاید حالا کمی بیشتر
+                  <br />
+                  خودت را بشناسی...
+                </strong>
+              </>
+            ) : (
+              <>
+                <span className="emotion-bottom-kicker">
+                  هنوز یک راز کوچک باقی مانده
+                </span>
+
+                <strong>
+                  {MAX_SELECTIONS - localSelections.length}
+                  {" "}
+                  انتخاب دیگر
+                </strong>
+              </>
+            )}
+          </div>
+
+          <div className="emotion-bottom-line" />
         </motion.div>
+
+        {/* CONTINUE */}
+        <motion.button
+          type="button"
+          disabled={!isComplete}
+          onClick={handleContinue}
+          className="emotion-continue"
+          animate={{
+            opacity: isComplete ? 1 : 0.3,
+            y: isComplete ? 0 : 8,
+          }}
+          whileHover={
+            isComplete
+              ? {
+                  scale: 1.035,
+                }
+              : undefined
+          }
+          whileTap={
+            isComplete
+              ? {
+                  scale: 0.97,
+                }
+              : undefined
+          }
+        >
+          <span>
+            {isComplete
+              ? "حالا ببینیم این انتخاب‌ها چه می‌گویند"
+              : "سه حس را پیدا کن"}
+          </span>
+
+          <b>←</b>
+        </motion.button>
       </section>
     </main>
   );

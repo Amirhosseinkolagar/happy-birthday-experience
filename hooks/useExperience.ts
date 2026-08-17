@@ -28,5 +28,8 @@ export function useExperience() {
 
     hasSecret:
       Boolean(experience.preferences.secretSymbol),
+
+    hasProfile:
+      Boolean(experience.preferences.profile),
   };
 }

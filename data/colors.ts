@@ -1,148 +1,319 @@
 import type { ColorOption } from "@/types/experience";
 
-export const colors: ColorOption[] = [
+export type ColorGroup = {
+  id: string;
+  name: string;
+  description: string;
+};
+
+export const colorGroups: ColorGroup[] = [
   {
-    id: "champagne",
-    name: "شامپاینی",
-    value: "#E8D5A8",
-    softValue: "#6E5D3C",
+    id: "black",
+    name: "سیاه و خاکستری",
+    description: "عمق، قدرت و سکوت",
   },
   {
-    id: "gold",
-    name: "طلایی",
-    value: "#D4AF37",
-    softValue: "#6B591D",
+    id: "red",
+    name: "قرمز",
+    description: "هیجان، جسارت و احساس",
   },
   {
-    id: "rose",
-    name: "رز",
-    value: "#D98C9A",
-    softValue: "#713F49",
+    id: "orange",
+    name: "نارنجی",
+    description: "انرژی، گرما و زندگی",
   },
   {
-    id: "blush",
-    name: "صورتی پودری",
-    value: "#E9BFC5",
-    softValue: "#755B60",
+    id: "yellow",
+    name: "زرد و طلایی",
+    description: "نور، شادی و درخشش",
+  },
+  {
+    id: "green",
+    name: "سبز",
+    description: "طبیعت، آرامش و تازگی",
+  },
+  {
+    id: "teal",
+    name: "فیروزه‌ای",
+    description: "آب، آزادی و تازگی",
+  },
+  {
+    id: "blue",
+    name: "آبی",
+    description: "آرامش، اعتماد و عمق",
+  },
+  {
+    id: "purple",
+    name: "بنفش",
+    description: "راز، خیال و شکوه",
   },
   {
     id: "lavender",
     name: "یاسی",
-    value: "#B9A7D9",
-    softValue: "#5E5470",
+    description: "لطافت، رویا و آرامش",
   },
   {
-    id: "royal-purple",
-    name: "بنفش سلطنتی",
-    value: "#7654A8",
-    softValue: "#3F2D5A",
+    id: "pink",
+    name: "صورتی",
+    description: "محبت، لطافت و احساس",
   },
   {
-    id: "midnight-blue",
-    name: "آبی نیمه‌شب",
-    value: "#52658C",
-    softValue: "#303A52",
-  },
-  {
-    id: "ice-blue",
-    name: "آبی یخی",
-    value: "#A8D8E8",
-    softValue: "#55717A",
-  },
-  {
-    id: "ocean",
-    name: "اقیانوسی",
-    value: "#247A88",
-    softValue: "#174B53",
-  },
-  {
-    id: "emerald",
-    name: "زمردی",
-    value: "#2F8F70",
-    softValue: "#1E5846",
-  },
-  {
-    id: "sage",
-    name: "سبز مریم‌گلی",
-    value: "#A5B59B",
-    softValue: "#596451",
-  },
-  {
-    id: "mint",
-    name: "نعنایی",
-    value: "#A7D8C5",
-    softValue: "#547268",
-  },
-  {
-    id: "coral",
-    name: "مرجانی",
-    value: "#E9856F",
-    softValue: "#743F34",
-  },
-  {
-    id: "sunset",
-    name: "غروب",
-    value: "#E39A62",
-    softValue: "#704E32",
-  },
-  {
-    id: "amber",
-    name: "کهربایی",
-    value: "#D88A28",
-    softValue: "#704817",
-  },
-  {
-    id: "ruby",
-    name: "یاقوتی",
-    value: "#A83D50",
-    softValue: "#5B202B",
-  },
-  {
-    id: "wine",
-    name: "شرابی",
-    value: "#702F43",
-    softValue: "#401C28",
-  },
-  {
-    id: "mocha",
-    name: "موکا",
-    value: "#9A7960",
-    softValue: "#514035",
-  },
-  {
-    id: "coffee",
+    id: "brown",
     name: "قهوه‌ای",
-    value: "#765746",
-    softValue: "#403027",
+    description: "گرما، اصالت و صمیمیت",
   },
   {
-    id: "ivory",
-    name: "آیوری",
-    value: "#F3EBDD",
-    softValue: "#756F65",
-  },
-  {
-    id: "silver",
-    name: "نقره‌ای",
-    value: "#BFC3C7",
-    softValue: "#62666A",
-  },
-  {
-    id: "pearl",
-    name: "مرواریدی",
-    value: "#D9D4CC",
-    softValue: "#6C6964",
-  },
-  {
-    id: "charcoal",
-    name: "ذغالی",
-    value: "#454545",
-    softValue: "#292929",
-  },
-  {
-    id: "black",
-    name: "مشکی",
-    value: "#111111",
-    softValue: "#050505",
+    id: "cream",
+    name: "کرم و سفید",
+    description: "نور، ظرافت و آرامش",
   },
 ];
+
+const familyDefinitions = [
+  {
+    id: "black",
+    name: "سیاه",
+    hue: 0,
+    saturation: 0,
+    lightness: [
+      8, 12, 16, 20, 24,
+      28, 32, 36, 40, 45,
+      50, 56, 64, 72, 82,
+    ],
+  },
+  {
+    id: "red",
+    name: "قرمز",
+    hue: 0,
+    saturation: 72,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 90,
+    ],
+  },
+  {
+    id: "orange",
+    name: "نارنجی",
+    hue: 25,
+    saturation: 76,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 90,
+    ],
+  },
+  {
+    id: "yellow",
+    name: "طلایی",
+    hue: 45,
+    saturation: 82,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 92,
+    ],
+  },
+  {
+    id: "green",
+    name: "سبز",
+    hue: 145,
+    saturation: 58,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 90,
+    ],
+  },
+  {
+    id: "teal",
+    name: "فیروزه‌ای",
+    hue: 175,
+    saturation: 65,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 90,
+    ],
+  },
+  {
+    id: "blue",
+    name: "آبی",
+    hue: 215,
+    saturation: 70,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 91,
+    ],
+  },
+  {
+    id: "purple",
+    name: "بنفش",
+    hue: 270,
+    saturation: 58,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 90,
+    ],
+  },
+  {
+    id: "lavender",
+    name: "یاسی",
+    hue: 285,
+    saturation: 42,
+    lightness: [
+      24, 29, 34, 39, 44,
+      49, 54, 59, 64, 69,
+      74, 79, 84, 89, 94,
+    ],
+  },
+  {
+    id: "pink",
+    name: "صورتی",
+    hue: 340,
+    saturation: 62,
+    lightness: [
+      20, 25, 30, 35, 40,
+      45, 50, 55, 60, 65,
+      70, 75, 80, 86, 92,
+    ],
+  },
+  {
+    id: "brown",
+    name: "قهوه‌ای",
+    hue: 25,
+    saturation: 38,
+    lightness: [
+      18, 23, 28, 33, 38,
+      43, 48, 53, 58, 63,
+      68, 73, 78, 84, 90,
+    ],
+  },
+  {
+    id: "cream",
+    name: "کرم",
+    hue: 42,
+    saturation: 25,
+    lightness: [
+      30, 35, 40, 45, 50,
+      55, 60, 65, 70, 75,
+      80, 84, 88, 92, 96,
+    ],
+  },
+] as const;
+
+const shadeNames = [
+  "شب",
+  "سایه",
+  "عمیق",
+  "تیره",
+  "دود",
+  "سنگ",
+  "اصلی",
+  "خالص",
+  "نرم",
+  "روشن",
+  "لطیف",
+  "پاستلی",
+  "ابری",
+  "مهتابی",
+  "درخشان",
+] as const;
+
+function hslToHex(
+  h: number,
+  s: number,
+  l: number
+): string {
+  s /= 100;
+  l /= 100;
+
+  const k = (n: number) =>
+    (n + h / 30) % 12;
+
+  const a =
+    s * Math.min(l, 1 - l);
+
+  const f = (n: number) =>
+    l -
+    a *
+      Math.max(
+        -1,
+        Math.min(
+          k(n) - 3,
+          Math.min(
+            9 - k(n),
+            1
+          )
+        )
+      );
+
+  const rgb = [
+    f(0),
+    f(8),
+    f(4),
+  ].map((value) =>
+    Math.round(value * 255)
+  );
+
+  return (
+    "#" +
+    rgb
+      .map((value) =>
+        value
+          .toString(16)
+          .padStart(2, "0")
+      )
+      .join("")
+  );
+}
+
+function createPalette(): ColorOption[] {
+  return familyDefinitions.flatMap(
+    (family) =>
+      family.lightness.map(
+        (lightness, index) => {
+          const value =
+            hslToHex(
+              family.hue,
+              family.saturation,
+              lightness
+            );
+
+          const softValue =
+            hslToHex(
+              family.hue,
+              Math.max(
+                0,
+                family.saturation - 18
+              ),
+              Math.max(
+                8,
+                lightness - 12
+              )
+            );
+
+          return {
+            id: `${family.id}-${index + 1}`,
+
+            name: `${family.name} ${shadeNames[index]}`,
+
+            value,
+
+            softValue,
+
+            // گروه اصلی رنگ
+            group: family.id,
+
+            // نام فارسی گروه
+            groupName: family.name,
+          };
+        }
+      )
+  );
+}
+
+export const colors: ColorOption[] =
+  createPalette();
